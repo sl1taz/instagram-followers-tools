@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>INSTAGRAM FOLLOWERS TOOLS</title>
+ <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-100 min-h-screen flex flex-col items-center py-10">
+ <div class="w-full max-w-4xl bg-white rounded shadow p-6">
+  <h1 class="text-2xl font-bold text-gray-700 mb-4">Get Instagram Diff</h1>
+  <div class="space-y-4">
+   <div>
+    <label class="block text-gray-600 mb-2" for="csv1">File 1:</label>
+    <input type="file" id="csv1" accept=".csv" class="border rounded w-full p-2">
+   </div>
+   <div>
+    <label class="block text-gray-600 mb-2" for="csv2">File 1:</label>
+    <input type="file" id="csv2" accept=".csv" class="border rounded w-full p-2">
+   </div>
+   <button id="compareButton" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Compare</button>
+  </div>
+
+  <div id="results" class="mt-6 hidden">
+   <h2 class="text-xl font-semibold text-gray-800">Result</h2>
+
+   <div id="added" class="mt-4">
+    <h3 class="text-lg font-bold text-green-600">New Data</h3>
+    <div id="addedList" class="space-y-6"></div>
+   </div>
+  </div>
+
+ </div>
+
+ <script>
+  function parseCsv(csv) {
+   const rows = csv.split('\n');
+   const headers = rows.shift().split(',').map(header => header.replace(/^﻿|"/g, '').trim());
+
+   return rows.map(row => {
+    const values = row.split(',');
+    const obj = {};
+    headers.forEach((header, index) => {
+     obj[header] = values[index]?.replace(/"/g, '').trim();
+    });
+    return obj;
+   }).filter(item => Object.keys(item).some(key => item[key]));
+  }
+
+  function openProfile(username) {
+   window.open(`https://www.instagram.com/${username}/`);
+  }
+
+  function createListItem(item) {
+   return `
+    <div  class="relative flex w-full items-center gap-4 rounded-xl border-2 border-black/40 p-2">
+        <div class="">
+            <h1 class="text-xl font-semibold">${item.fullName}</h1>
+            <span class="font-medium text-gray-800">@${item.userName}</span>
+        </div>
+        <button onclick="openProfile('${item.userName}')" class="absolute right-4">
+            <img src="https://static.cdninstagram.com/rsrc.php/v4/yI/r/VsNE-OHk_8a.png" class="h-8 w-8" alt="" />
+        </button>
+    </div>
+  `;
+  }
+
+
+  document.getElementById('compareButton').addEventListener('click', () => {
+   const csv1 = document.getElementById('csv1').files[0];
+   const csv2 = document.getElementById('csv2').files[0];
+
+   if (!csv1 || !csv2) {
+    alert('Please upload both CSV files.');
+    return;
+   }
+
+   Promise.all([csv1.text(), csv2.text()]).then(([oldData, newData]) => {
+    const oldJson = parseCsv(oldData);
+    const newJson = parseCsv(newData);
+
+    const oldIds = new Set(oldJson.map(item => item.id));
+    const added = newJson.filter(item => !oldIds.has(item.id));
+
+    document.getElementById('results').classList.remove('hidden');
+
+    const addedList = document.getElementById('addedList');
+    addedList.innerHTML = added.map(createListItem).join('');
+   }).catch(error => {
+    alert('Error processing files: ' + error.message);
+   });
+  });
+ </script>
+</body>
+
+</html>
